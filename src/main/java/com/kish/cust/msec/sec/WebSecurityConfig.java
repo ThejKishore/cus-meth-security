@@ -30,7 +30,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .password("namhm")
                 .roles("USER")
                 .authorities(new SimpleGrantedAuthority("FOO_READ"))
-
                 .build();
         UserDetails user2 = User
                 .withUsername("admin")
