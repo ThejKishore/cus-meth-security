@@ -3,6 +3,7 @@ package com.kish.cust.msec.sec;
 import org.springframework.security.access.expression.SecurityExpressionRoot;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot
@@ -22,22 +23,29 @@ public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot
     public boolean isMember(Long OrganizationId) {
         UserDetails user =  ((UserDetails)authentication.getPrincipal());
         return  user.isEnabled();
-//        return user.getOrganization().getId().longValue() == OrganizationId.longValue();
+    }
+
+    public boolean isMember(Object targetDomainObject, Object permission) {
+        return isMember(getAuthentication(),targetDomainObject,permission);
     }
 
 
-    public boolean isMember(Object targetId, Object permission) {
+    public boolean isMember(Authentication auth,Object targetDomainObject, Object permission) {
+        if ((auth == null) || (targetDomainObject == null) || !(permission instanceof String)){
+            return false;
+        }
+        String targetType = targetDomainObject.getClass().getSimpleName().toUpperCase();
 
-        UserDetails user =  ((UserDetails)authentication.getPrincipal());
-        return  user.isEnabled();
-//        return user.getOrganization().getId().longValue() == OrganizationId.longValue();
+        return hasPrivilege(auth, targetType, permission.toString().toUpperCase());
     }
 
-    public boolean isMember(Object targetId, String targetType, Object permission) {
+    public boolean isMember(Authentication auth,Object targetId, String targetType, Object permission) {
 
-        UserDetails user =  ((UserDetails)authentication.getPrincipal());
-        return  user.isEnabled();
-//        return user.getOrganization().getId().longValue() == OrganizationId.longValue();
+        if ((auth == null) || (targetType == null) || !(permission instanceof String)) {
+            return false;
+        }
+        return hasPrivilege(auth, targetType.toUpperCase(),
+                permission.toString().toUpperCase());
     }
 
     @Override
@@ -75,4 +83,14 @@ public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot
         return this.target;
     }
 
+    private boolean hasPrivilege(Authentication auth, String targetType, String permission) {
+        for (GrantedAuthority grantedAuth : auth.getAuthorities()) {
+            if (grantedAuth.getAuthority().startsWith(targetType)) {
+                if (grantedAuth.getAuthority().contains(permission)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

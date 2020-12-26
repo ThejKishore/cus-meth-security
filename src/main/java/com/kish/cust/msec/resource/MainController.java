@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class MainController {
 
-    @PostAuthorize("hasPermission(returnObject, 'read')")
+    @PostAuthorize("isMember(returnObject, 'read')")
     @GetMapping("/foos/{id}")
     @ResponseBody
     public Foo findById(@PathVariable long id) {
